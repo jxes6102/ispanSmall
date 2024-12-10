@@ -1,18 +1,19 @@
 import { createRouter, createWebHistory,createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import gameView from '../views/gameView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView
+      name: 'game',
+      component: gameView
     },
-    // { 
-    //   path: '/:pathMatch(.*)*',
-    //   component: errorView 
-    // },
+    { 
+      path: '/:pathMatch(.*)*',
+      component: HomeView 
+    },
     // {
     //   path: '/about',
     //   name: 'about',

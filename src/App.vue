@@ -3,7 +3,24 @@
 </template>
 
 <script setup>
+import { ref,computed,onMounted } from 'vue'
+import { useMobileStore } from '@/stores/index'
+const mobileStore = useMobileStore()
+const isMobile = computed(() => {
+  return mobileStore.isMobile
+})
+const setWidth = () => {
+  mobileStore.setMobile(window.innerWidth)
+}
 
+onMounted(() => {
+  setWidth()
+
+  window.addEventListener('resize', () => {
+    setWidth()
+  }, false);
+
+})
 </script>
 
 <style scoped>
