@@ -1,11 +1,10 @@
 <template>
-    <div class="w-[100vw] h-[100vh] bg-[#DFF6DD] flex items-center justify-center">
+    <div v-stoprightmouse class="w-[100vw] h-[100vh] bg-[#DFF6DD] flex items-center justify-center">
         <mine></mine>
     </div>
-    
 </template>
-
 <script setup>
+import { ref,computed,watch  } from 'vue'
 import mine from '@/components/mine.vue'
 // 背景色：淡綠色 (#DFF6DD)
 // 搭配色：森林綠 (#228B22)、淺藍色 (#E0F7FA)、土黃色 (#F4A261)

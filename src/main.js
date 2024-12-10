@@ -22,6 +22,14 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
 
+app.directive('stoprightmouse', {
+    mounted(el, binding, vnode) {
+        el.oncontextmenu = () => {
+            return false
+        }
+    },
+})
+
 app.use(i18n)
 app.use(pinia)
 app.use(router)

@@ -1,31 +1,36 @@
 <template>
-    <div class="w-[auto] md:w-[auto] h-auto flex flex-col items-center justify-start">
-      <div class="w-4/5 md:w-full bg-[#FFD166] rounded-md">
-        <select v-model="level" class="w-[70px] md:w-1/5 m-1 p-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  ">
-          <option value="easy">簡單</option>
-          <option value="normal">普通</option>
-        </select>
-      </div>  
-      <div v-if="land.length > 0" class="flex-wrap mine-flex-center">
-            <div v-for="(item, index) in land[0].length" :key="index">
-                <div class="w-[22px] h-[22px] md:w-[40px] md:h-[40px] border-2 border-[#E0F7FA] rounded mine-flex-center " 
-                  v-for="(items, indexs) in land" :class="[land[indexs][index].check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
-                  @click="action(indexs,index)" :key="indexs">
-                  {{land[indexs][index].display}}
-                </div>
-            </div>
-        </div>
-        <div class="flex-col mine-flex-center m-1">
-            <div class="my-1" v-text="'現在模式: ' + (flagStatus ? '標記' : '點擊')"></div>
-            <button class="text-white py-2 px-4 font-medium rounded-xl transition-all duration-300" :class="[flagStatus ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400']" @click="flagStatus = !flagStatus">切換 點擊/標記</button>
-        </div>
-        <div
-            class="flex-col mine-flex-centerr" v-if="endStatus">
-            <div class="flex-col mine-flex-center text-2xl my-1" v-text="isWin ? '贏了' : '暴了'" :class="[isWin ? 'text-green-500' : 'text-red-500']"></div><button class="bg-green-500 text-white py-2 px-4 font-medium rounded-xl transition-all duration-300 hover:bg-green-400" @click="init">再玩一次</button>
-        </div>
+  <div class="w-[auto] md:w-[auto] h-auto flex flex-col items-center justify-start">
+    <div class="w-full bg-[rgba(255,209,102,0.7)] rounded-md">
+      <select v-model="level" class="w-[70px] md:w-1/5 m-1 p-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  ">
+        <option value="easy">簡單</option>
+        <option value="normal">普通</option>
+      </select>
+    </div>  
+    <div v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
+      <div v-for="(item, index) in land[0].length" :key="index">
+          <div class="w-[22px] h-[22px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
+            v-for="(items, indexs) in land" :class="[land[indexs][index].check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
+            @mousedown="action(indexs,index,$event)" :key="indexs">
+            {{land[indexs][index].display}}
+          </div>
+      </div>
     </div>
+    <Teleport to='body'>
+      <messageBox v-if="endStatus">
+        <template v-slot:text>
+          <div class="text-5xl" :class="[isWin ? 'text-green-500' : 'text-red-500']">
+            {{ isWin ? '成功' : '失敗' }}
+          </div>
+        </template>
+        <template v-slot:button>
+          <button class="bg-green-500 text-white py-2 px-4 font-medium rounded-xl transition-all duration-300 hover:bg-green-400" @click="init">再玩一次</button>
+        </template>
+      </messageBox>  
+    </Teleport>
+  </div>
 </template>
 <script setup>
+import messageBox from '@/components/message.vue'
 import { ref,computed,watch  } from 'vue'
 import { useMobileStore } from '@/stores/index'
 const mobileStore = useMobileStore()
@@ -121,10 +126,10 @@ const madeBoom = () => {
 
 init()
     
-const action = (x,y) => {
+const action = (x,y,event = null) => {
   if(endStatus.value) return false
   // 標記時動作
-  if (flagStatus.value && !land.value[x][y].check) {
+  if ((event?.button == 2) && (!land.value[x][y].check)) {
     if(land.value[x][y].display === 'F') {
       land.value[x][y].display = ''
       guessBoom.value.splice(guessBoom.value.indexOf(x + ',' + y),1)
@@ -172,6 +177,11 @@ const count = (x,y) => {
   } else land.value[x][y].display = num
 
 }
+
+const test = (event) => {
+  console.log('event',event.button)
+}
+
     
 watch(() => guessBoom.value ,() => {
   // 判斷勝負
