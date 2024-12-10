@@ -1,35 +1,52 @@
 <template>
   <div class="w-[auto] md:w-[auto] h-auto flex flex-col items-center justify-start">
-    <div class="w-full bg-[rgba(255,209,102,0.7)] rounded-md">
-      <select v-model="level" class="w-[70px] md:w-1/5 m-1 p-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  ">
+    <div class="w-full flex flex-wrap items-center bg-[rgba(255,209,102,0.7)] rounded-md">
+      <select v-model="level" class="w-[70px] md:w-1/5 m-1 md:m-2 p-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 ">
         <option value="easy">簡單</option>
         <option value="normal">普通</option>
       </select>
+      <div class="w-auto p-2 flex flex-wrap items-center justify-center">
+        <img class="h-[20px] md:h-[35px]" src="@/assets/img/redflag.png" alt="">
+        <div class="text-base md:text-xl text-[#3D3D3D] font-bold">{{boomCount}}</div>
+      </div>
     </div>  
     <div v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
       <div v-for="(item, index) in land[0].length" :key="index">
           <div class="w-[22px] h-[22px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
             v-for="(items, indexs) in land" :class="[land[indexs][index].check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
             @mousedown="action(indexs,index,$event)" :key="indexs">
-            {{land[indexs][index].display}}
+            <span v-if="land[indexs][index].display == 'F'">
+              <img class="h-full" src="@/assets/img/redflag.png" alt="">
+            </span>
+            <span v-else-if="land[indexs][index].display == 'X'">
+              <img class="h-full" src="@/assets/img/boom.png" alt="">
+            </span>
+            <span v-else>{{land[indexs][index].display}}</span>
           </div>
       </div>
     </div>
     <Teleport to='body'>
-      <messageBox v-if="endStatus">
-        <template v-slot:text>
-          <div class="text-5xl" :class="[isWin ? 'text-green-500' : 'text-red-500']">
-            {{ isWin ? '成功' : '失敗' }}
-          </div>
-        </template>
-        <template v-slot:button>
-          <button class="bg-green-500 text-white py-2 px-4 font-medium rounded-xl transition-all duration-300 hover:bg-green-400" @click="init">再玩一次</button>
-        </template>
-      </messageBox>  
+      <Transition
+        name="custom-classes"
+        enter-active-class="animate__animated animate__fadeIn"
+        leave-active-class="animate__animated animate__fadeOut"
+      >
+        <messageBox v-if="endStatus">
+          <template v-slot:text>
+            <div class="text-5xl" :class="[isWin ? 'text-green-500' : 'text-red-500']">
+              {{ isWin ? '成功' : '失敗' }}
+            </div>
+          </template>
+          <template v-slot:button>
+            <button class="bg-green-500 text-white py-2 px-4 font-medium rounded-xl transition-all duration-300 hover:bg-green-400" @click="init">再玩一次</button>
+          </template>
+        </messageBox> 
+      </Transition>
     </Teleport>
   </div>
 </template>
 <script setup>
+import 'animate.css';
 import messageBox from '@/components/message.vue'
 import { ref,computed,watch  } from 'vue'
 import { useMobileStore } from '@/stores/index'
@@ -37,14 +54,12 @@ const mobileStore = useMobileStore()
 const isMobile = computed(() => {
   return mobileStore.isMobile
 })
-const flagStatus = ref(false)
 const endStatus = ref(false)
 const isWin = ref(false)
 const land = ref([])
 let flagBoom = []
 const guessBoom = ref([])
 const level = ref('easy')
-
 const gameRule = computed(() => {
   let gameDetail = {
     easy:{
@@ -85,11 +100,13 @@ const gameRule = computed(() => {
 
   return target
 })
+const boomCount = computed(() => {
+  return gameRule.value.boomAmount - guessBoom.value.length
+})
     
 const init = () => {
   // 初始化格子和炸彈
   endStatus.value = false
-  flagStatus.value = false
   land.value = []
   guessBoom.value = []
   isWin.value = false
@@ -189,6 +206,7 @@ watch(() => guessBoom.value ,() => {
     endStatus.value = true
     isWin.value = true
   }
+
 },{deep: true})
 
 watch(() => gameRule.value ,() => {
