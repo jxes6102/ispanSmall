@@ -10,7 +10,7 @@
         <div class="text-base md:text-xl text-[#3D3D3D] font-bold">{{boomCount}}</div>
       </div>
     </div>  
-    <div v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
+    <div ref="broad" v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
       <div v-for="(item, index) in land[0].length" :key="index">
           <div class="w-[22px] h-[22px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
             v-for="(items, indexs) in land" :class="[land[indexs][index].check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
@@ -42,19 +42,27 @@
           </template>
         </messageBox> 
       </Transition>
+      <mobileBroad v-if="mobileSelectStatus">
+      </mobileBroad>
     </Teleport>
   </div>
 </template>
 <script setup>
 import 'animate.css';
+import { useMouseInElement } from '@vueuse/core'
 import messageBox from '@/components/message.vue'
+import mobileBroad from '@/components/mobileBroad.vue'
 import { ref,computed,watch  } from 'vue'
-import { useMobileStore } from '@/stores/index'
+import { useMobileStore,useClickStore } from '@/stores/index'
 const mobileStore = useMobileStore()
+const clickStore = useClickStore()
 const isMobile = computed(() => {
   return mobileStore.isMobile
 })
+const broad = ref(null)
+const { elementX, elementY,elementPositionX,elementPositionY } = useMouseInElement(broad)
 const endStatus = ref(false)
+const mobileSelectStatus = ref(false)
 const isWin = ref(false)
 const land = ref([])
 let flagBoom = []
@@ -145,6 +153,19 @@ init()
     
 const action = (x,y,event = null) => {
   if(endStatus.value) return false
+
+  if(isMobile.value){
+    mobileSelectStatus.value = true
+    console.log('====================================')
+    console.log('x',x)
+    console.log('y',y)
+    // console.log('elementX',elementX.value)
+    // console.log('elementY',elementY.value)
+    // console.log('elementPositionX',elementPositionX.value)
+    // console.log('elementPositionY',elementPositionY.value)
+    clickStore.setPosition(Math.floor(elementX.value),Math.floor(elementY.value),Math.floor(elementPositionX.value),Math.floor(elementPositionY.value))
+    return false
+  }
   // 標記時動作
   if ((event?.button == 2) && (!land.value[x][y].check)) {
     if(land.value[x][y].display === 'F') {
