@@ -5,9 +5,13 @@
         <option value="easy">簡單</option>
         <option value="normal">普通</option>
       </select>
-      <div class="w-auto p-2 flex flex-wrap items-center justify-center">
+      <div class="w-auto p-1 md:p-2 flex flex-wrap items-center justify-center">
         <img class="h-[20px] md:h-[35px]" src="@/assets/img/redflag.png" alt="">
         <div class="text-base md:text-xl text-[#3D3D3D] font-bold">{{boomCount}}</div>
+      </div>
+      <div class="w-auto p-1 md:p-2 flex flex-wrap items-center justify-center">
+        <img class="h-[20px] md:h-[35px]" src="@/assets/img/clock.png" alt="">
+        <div class="w-[30px] md:w-[35px] mx-[2px] text-base md:text-xl text-[#3D3D3D] font-bold">{{second}}</div>
       </div>
     </div>  
     <div ref="broad" v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
@@ -33,12 +37,15 @@
       >
         <messageBox v-if="endStatus">
           <template v-slot:text>
-            <div class="text-5xl" :class="[isWin ? 'text-green-500' : 'text-red-500']">
+            <div class="text-3xl font-bold">
+              {{ '時間:' + recordSecond }}
+            </div>
+            <div class="text-5xl font-bold" :class="[isWin ? 'text-green-500' : 'text-red-500']">
               {{ isWin ? '成功' : '失敗' }}
             </div>
           </template>
           <template v-slot:button>
-            <button class="bg-green-500 text-white py-2 px-4 font-medium rounded-xl transition-all duration-300 hover:bg-green-400" @click="init">再玩一次</button>
+            <button class="bg-green-500 text-xl font-bold text-[#FFFFF0] py-2 px-4 rounded-xl transition-all duration-300 hover:bg-green-400" @click="init">再玩一次</button>
           </template>
         </messageBox> 
       </Transition>
@@ -79,7 +86,17 @@ let flagBoom = []
 const guessBoom = ref([])
 const level = ref('easy')
 const gameRule = computed(() => {
+  gameStore.clearTimer()
   return gameStore.setRule(isMobile.value,level.value)
+})
+const second = computed(() => {
+  return gameStore.second
+})
+const timerStatus = computed(() => {
+  return gameStore.timerStatus
+})
+const recordSecond = computed(() => {
+  return gameStore.recordSecond
 })
 const boomCount = computed(() => {
   return gameRule.value.boomAmount - guessBoom.value.length
@@ -111,6 +128,7 @@ const init = () => {
     }
   }
   madeBoom()
+  gameStore.clearSecond()
 }
     
 const madeBoom = () => {
@@ -133,6 +151,11 @@ init()
 const action = (x,y,event = null) => {
   //點擊時觸發
   if(endStatus.value) return false
+
+  if(!timerStatus.value){
+    gameStore.createTimer()
+  }
+
   //手機板改流程和調整icon位置
   if(isMobile.value && !land.value[x][y].check){
     step.x = x
@@ -181,6 +204,8 @@ const mark = (x = null,y = null,event = null) => {
     land.value[x][y].display = 'X'
     land.value[x][y].check = true
     endStatus.value = true
+    gameStore.clearTimer()
+    gameStore.getRecord()
     return false
   }
   // 計算本格和周圍數字
@@ -221,8 +246,11 @@ const close = () => {
 watch(() => guessBoom.value ,() => {
   // 判斷勝負
   if (flagBoom.sort().toString() === guessBoom.value.sort().toString()) {
+    gameStore.setRecord()
     endStatus.value = true
     isWin.value = true
+    gameStore.clearTimer()
+    gameStore.getRecord()
   }
 
 },{deep: true})

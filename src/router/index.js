@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory,createWebHashHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import errorView from '../views/errorView.vue'
 import gameView from '../views/gameView.vue'
 
 const router = createRouter({
@@ -12,7 +12,7 @@ const router = createRouter({
     },
     { 
       path: '/:pathMatch(.*)*',
-      component: HomeView 
+      component: errorView 
     },
     // {
     //   path: '/about',

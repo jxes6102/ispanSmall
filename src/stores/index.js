@@ -55,5 +55,35 @@ export const useGameStore = defineStore('game', () => {
         return target
     }
 
-    return { setRule }
+    const recordSecond = ref('無')
+    const second = ref(0)
+    let timer = null
+    const timerStatus = ref(false)
+
+    const createTimer = () => {
+        timerStatus.value = true
+        timer = setInterval(() => {
+            if(second.value<999){
+                second.value++
+            }
+        }, 1000);
+    }
+
+    const clearTimer = () => {
+        clearInterval(timer)
+        timerStatus.value = false
+    }
+
+    const setRecord = () => {
+        // localStorage.setItem("bestRecord", second.value)
+    }
+    const getRecord = () => {
+        // recordSecond.value = localStorage.getItem("bestRecord") || '無'
+        recordSecond.value = second.value
+    }
+    const clearSecond = () => {
+        second.value = 0
+    }
+
+    return { setRule,createTimer,clearTimer,getRecord,setRecord,clearSecond,timerStatus,second,recordSecond }
 })
