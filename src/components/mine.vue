@@ -16,7 +16,7 @@
     </div>  
     <div ref="broad" v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
       <div v-for="(item, index) in land[0].length" :key="index">
-          <div class="w-[24px] h-[24px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
+          <div class="w-[24px] h-[24px] mobile:w-[30px] mobile:h-[30px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
             v-for="(items, indexs) in land" :class="[land[indexs][index].check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
             @mousedown="action(indexs,index,$event)" :key="indexs">
             <span v-if="land[indexs][index].display == 'F'">
@@ -55,9 +55,9 @@
             :class="[iconPositionObject.isVertical ? 'flex-col' : '']" 
             class="absolute w-[auto] h-[auto] rounded-xl flex gap-[2px]" 
             :style="iconPositionObject">
-            <img @click="mark(null,null)" class="h-[30px]" src="@/assets/img/shovel.png" alt="">
-            <img @click="close" class="h-[30px]" src="@/assets/img/arrow.png" alt="">
-            <img @click="mark(null,null,2)" class="h-[30px]" src="@/assets/img/redflag.png" alt="">
+            <img @click="mark(null,null)" class="h-[30px] mobile:h-[40px]" src="@/assets/img/shovel.png" alt="">
+            <img @click="close" class="h-[30px] mobile:h-[40px]" src="@/assets/img/arrow.png" alt="">
+            <img @click="mark(null,null,2)" class="h-[30px] mobile:h-[40px]" src="@/assets/img/redflag.png" alt="">
           </div>
         </template>
       </mobileBroad>
@@ -164,12 +164,24 @@ const action = (x,y,event = null) => {
 
     if(step.x + 1 == land.value.length){
       iconPositionObject.value.isVertical = false
-      iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 15 + 'px'
-      iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) -50 + 'px'
+      if(window.screen.width < 350){
+        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 15 + 'px'
+        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 47 + 'px'
+      }else{
+        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 20 + 'px'
+        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 62 + 'px'
+      }
+      
     }else{
       iconPositionObject.value.isVertical = true
-      iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 50 + 'px'
-      iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 15 + 'px'
+      if(window.screen.width < 350){
+        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 47 + 'px'
+        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 15 + 'px'
+      }else{
+        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 62 + 'px'
+        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 20 + 'px'
+      }
+      
     }
   }else{
     mark(x,y,event)
