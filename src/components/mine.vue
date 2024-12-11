@@ -43,6 +43,13 @@
         </messageBox> 
       </Transition>
       <mobileBroad v-if="mobileSelectStatus">
+        <template v-slot:icon>
+          <div class="absolute w-[auto] h-[auto] rounded-xl flex flex-col gap-y-[5px]" :style="iconPositionObject">
+            <img @click="mark(null,null)" class="h-[30px]" src="@/assets/img/shovel.png" alt="">
+            <img @click="close" class="h-[30px]" src="@/assets/img/arrow.png" alt="">
+            <img @click="mark(null,null,2)" class="h-[30px]" src="@/assets/img/redflag.png" alt="">
+          </div>
+        </template>
       </mobileBroad>
     </Teleport>
   </div>
@@ -53,9 +60,9 @@ import { useMouseInElement } from '@vueuse/core'
 import messageBox from '@/components/message.vue'
 import mobileBroad from '@/components/mobileBroad.vue'
 import { ref,computed,watch  } from 'vue'
-import { useMobileStore,useClickStore } from '@/stores/index'
+import { useMobileStore,useGameStore } from '@/stores/index'
 const mobileStore = useMobileStore()
-const clickStore = useClickStore()
+const gameStore = useGameStore()
 const isMobile = computed(() => {
   return mobileStore.isMobile
 })
@@ -69,49 +76,17 @@ let flagBoom = []
 const guessBoom = ref([])
 const level = ref('easy')
 const gameRule = computed(() => {
-  let gameDetail = {
-    easy:{
-      p:{
-        boomAmount:10,
-        row:8,
-        col:10,
-      },
-      m:{
-        boomAmount:10,
-        row:12,
-        col:6,
-      }
-    },
-    normal:{
-      p:{
-        boomAmount:40,
-        row:14,
-        col:18,
-      },
-      m:{
-        boomAmount:35,
-        row:18,
-        col:10,
-      }
-    }
-  }
-  let target = {}
-  if(isMobile.value && level.value == 'easy'){
-    target = gameDetail.easy.m
-  }else if(isMobile.value && level.value == 'normal'){
-    target = gameDetail.normal.m
-  }else if(!isMobile.value && level.value == 'easy'){
-    target = gameDetail.easy.p
-  }else if(!isMobile.value && level.value == 'normal'){
-    target = gameDetail.normal.p
-  }
-
-  return target
+  return gameStore.setRule(isMobile.value,level.value)
 })
 const boomCount = computed(() => {
   return gameRule.value.boomAmount - guessBoom.value.length
 })
-    
+const iconPositionObject = ref({
+  top: '0px',
+  left: '0px'
+})
+let step = {x:null,y:null}
+
 const init = () => {
   // 初始化格子和炸彈
   endStatus.value = false
@@ -150,25 +125,36 @@ const madeBoom = () => {
 }
 
 init()
-    
+
 const action = (x,y,event = null) => {
+  //點擊時觸發
   if(endStatus.value) return false
 
-  if(isMobile.value){
+  if(isMobile.value && !land.value[x][y].check){
     mobileSelectStatus.value = true
-    console.log('====================================')
-    console.log('x',x)
-    console.log('y',y)
-    // console.log('elementX',elementX.value)
-    // console.log('elementY',elementY.value)
-    // console.log('elementPositionX',elementPositionX.value)
-    // console.log('elementPositionY',elementPositionY.value)
-    clickStore.setPosition(Math.floor(elementX.value),Math.floor(elementY.value),Math.floor(elementPositionX.value),Math.floor(elementPositionY.value))
-    return false
+    iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 50 + 'px'
+    iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 15 + 'px'
+    step.x = x
+    step.y = y
+  }else{
+    mark(x,y,event)
   }
+}
+
+const mark = (x = null,y = null,event = null) => {
+  if((x ==  null)){
+    x = step.x
+  }
+  if((y == null)){
+    y = step.y
+  }
+  if(isMobile.value){
+    mobileSelectStatus.value = false
+  }
+
   // 標記時動作
-  if ((event?.button == 2) && (!land.value[x][y].check)) {
-    if(land.value[x][y].display === 'F') {
+  if (((event?.button == 2) || (event == 2)) && (!land.value[x][y].check)) {
+    if(land.value[x][y].display == 'F') {
       land.value[x][y].display = ''
       guessBoom.value.splice(guessBoom.value.indexOf(x + ',' + y),1)
     }else {
@@ -204,23 +190,22 @@ const count = (x,y) => {
 
   if (!num) {
     // 本格周圍炸彈數0時擴散檢查
-    if ((x - 1 >= 0) && (y - 1 >= 0)) if (!land.value[x - 1][y - 1].check) action(x - 1,y - 1)
-    if (x - 1 >= 0 ) if (!land.value[x - 1][y].check) action(x - 1,y)
-    if ((x - 1 >= 0) && (y + 1 < gameRule.value.col)) if (!land.value[x - 1][y + 1].check) action(x - 1,y + 1)
-    if (y - 1 >= 0) if (!land.value[x][y - 1].check) action(x,y - 1)
-    if (y + 1 < gameRule.value.col) if (!land.value[x][y + 1].check) action(x,y + 1)
-    if ((x + 1 < gameRule.value.row) && (y - 1 >= 0)) if (!land.value[x + 1][y - 1].check) action(x + 1,y - 1)
-    if (x + 1 < gameRule.value.row) if (!land.value[x + 1][y].check) action(x + 1,y)
-    if ((x + 1 < gameRule.value.row) && (y + 1 < gameRule.value.col)) if (!land.value[x + 1][y + 1].check) action(x + 1,y + 1)
+    if ((x - 1 >= 0) && (y - 1 >= 0)) if (!land.value[x - 1][y - 1].check) mark(x - 1,y - 1)
+    if (x - 1 >= 0 ) if (!land.value[x - 1][y].check) mark(x - 1,y)
+    if ((x - 1 >= 0) && (y + 1 < gameRule.value.col)) if (!land.value[x - 1][y + 1].check) mark(x - 1,y + 1)
+    if (y - 1 >= 0) if (!land.value[x][y - 1].check) mark(x,y - 1)
+    if (y + 1 < gameRule.value.col) if (!land.value[x][y + 1].check) mark(x,y + 1)
+    if ((x + 1 < gameRule.value.row) && (y - 1 >= 0)) if (!land.value[x + 1][y - 1].check) mark(x + 1,y - 1)
+    if (x + 1 < gameRule.value.row) if (!land.value[x + 1][y].check) mark(x + 1,y)
+    if ((x + 1 < gameRule.value.row) && (y + 1 < gameRule.value.col)) if (!land.value[x + 1][y + 1].check) mark(x + 1,y + 1)
   } else land.value[x][y].display = num
 
 }
 
-const test = (event) => {
-  console.log('event',event.button)
+const close = () => {
+  mobileSelectStatus.value = false
 }
 
-    
 watch(() => guessBoom.value ,() => {
   // 判斷勝負
   if (flagBoom.sort().toString() === guessBoom.value.sort().toString()) {

@@ -13,21 +13,47 @@ export const useMobileStore = defineStore('mobile', () => {
     return { width, isMobile ,setMobile }
 })
 
-export const useClickStore = defineStore('click', () => {
-    const position = ref({
-        elementX:0,
-        elementY:0,
-        elementPositionX:0,
-        elementPositionY:0
-    })
-
-    const setPosition = (ex,ey,epx,epy) => {
-        position.value.elementX = ex
-        position.value.elementY = ey
-        position.value.elementPositionX = epx
-        position.value.elementPositionY = epy
-        console.log('position',position)
+export const useGameStore = defineStore('game', () => {
+    const setRule = (isMobile,level) => {
+        let gameDetail = {
+            easy:{
+                p:{
+                    boomAmount:10,
+                    row:8,
+                    col:10,
+                },
+                m:{
+                    boomAmount:10,
+                    row:12,
+                    col:6,
+                }
+            },
+            normal:{
+                p:{
+                    boomAmount:40,
+                    row:14,
+                    col:18,
+                },
+                m:{
+                    boomAmount:30,
+                    row:18,
+                    col:10,
+                }
+            }
+        }
+        let target = {}
+        if(isMobile && level == 'easy'){
+            target = gameDetail.easy.m
+        }else if(isMobile && level == 'normal'){
+            target = gameDetail.normal.m
+        }else if(!isMobile && level == 'easy'){
+            target = gameDetail.easy.p
+        }else if(!isMobile && level == 'normal'){
+            target = gameDetail.normal.p
+        }
+    
+        return target
     }
 
-    return { position,setPosition }
+    return { setRule }
 })
