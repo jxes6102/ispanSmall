@@ -13,8 +13,11 @@
         <img class="h-[20px] md:h-[35px]" src="@/assets/img/clock.png" alt="">
         <div class="w-[30px] md:w-[35px] mx-[2px] text-base md:text-xl text-[#3D3D3D] font-bold">{{second}}</div>
       </div>
-      <div class="w-auto p-1 md:p-2 flex flex-wrap items-center justify-center">
+      <div class="w-auto mx-1 md:mx-2 p-1 md:p-2 flex flex-wrap items-center justify-center">
         <img @click="reGame" class="h-[20px] md:h-[35px]" src="@/assets/img/return.png" alt="">
+      </div>
+      <div class="w-auto mx-1 md:mx-2 p-1 md:p-2 flex flex-wrap items-center justify-center">
+        <img @click="openIntroduction" class="h-[20px] md:h-[35px]" src="@/assets/img/documents.png" alt="">
       </div>
     </div>  
     <div ref="broad" v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
@@ -64,6 +67,9 @@
           </div>
         </template>
       </mobileBroad>
+      <introduction v-if="introductionStatus">
+
+      </introduction>
     </Teleport>
   </div>
 </template>
@@ -72,7 +78,8 @@ import 'animate.css';
 import { useMouseInElement } from '@vueuse/core'
 import messageBox from '@/components/message.vue'
 import mobileBroad from '@/components/mobileBroad.vue'
-import { ref,computed,watch  } from 'vue'
+import introduction from '@/components/introduction.vue'
+import { ref,computed,watch, provide  } from 'vue'
 import { useMobileStore,useGameStore } from '@/stores/index'
 const mobileStore = useMobileStore()
 const gameStore = useGameStore()
@@ -320,6 +327,19 @@ const reGame = () => {
   gameStore.clearSecond()
   init(true)
 }
+
+const introductionStatus = ref(false)
+const openIntroduction = () => {
+  console.log('openIntroduction')
+  introductionStatus.value = true
+}
+const closeIntroduction = () => {
+  console.log('closeIntroduction')
+  introductionStatus.value = false
+}
+provide('location', {
+  closeIntroduction
+})
 
 watch(() => guessBoom.value ,() => {
   // 判斷勝負
