@@ -17,15 +17,15 @@
     <div ref="broad" v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
       <div v-for="(item, index) in land[0].length" :key="index">
           <div class="w-[24px] h-[24px] mobile:w-[30px] mobile:h-[30px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
-            v-for="(items, indexs) in land" :class="[land[indexs][index].check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
+            v-for="(items, indexs) in land" :class="[land[indexs][index]?.check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
             @mousedown="action(indexs,index,$event)" :key="indexs">
-            <span v-if="land[indexs][index].display == 'F'">
+            <span v-if="land[indexs][index]?.display == 'F'">
               <img class="h-full" src="@/assets/img/redflag.png" alt="">
             </span>
-            <span v-else-if="land[indexs][index].display == 'X'">
+            <span v-else-if="land[indexs][index]?.display == 'X'">
               <img class="h-full" src="@/assets/img/boom.png" alt="">
             </span>
-            <span v-else>{{land[indexs][index].display}}</span>
+            <span class="text-lg mobile:text-xl md:text-2xl" v-else>{{land[indexs][index]?.display}}</span>
           </div>
       </div>
     </div>
@@ -121,27 +121,38 @@ const countTable = (x,y) => {
 
 }
 
-const init = () => {
+const init = (isNew = false) => {
   // 初始化格子和炸彈
   endStatus.value = false
-  land.value = []
+  if(isNew){
+    land.value = []
+  }
   guessBoom.value = []
   isWin.value = false
   flagBoom = []
   
   for(let i = 0;i<gameRule.value.row;i++) {
-    land.value[i] = []
+    if(isNew){
+      land.value[i] = []
+    }
     for(let j = 0;j<gameRule.value.col;j++) {
-      land.value[i][j] = {
-        flag:false,
-        display:'',
-        check:false,
-        figure:0
+      if(isNew){
+        land.value[i][j] = {
+          display:'',
+          check:false,
+          figure:0
+        }
+      }else{
+        land.value[i][j].check = false
+        land.value[i][j].figure = 0
       }
     }
   }
   madeBoom()
-  gameStore.clearSecond()
+
+  if(!timerStatus.value){
+    gameStore.clearSecond()
+  }
   
 }
     
@@ -160,16 +171,17 @@ const madeBoom = () => {
   }
 }
 
-init()
+init(true)
 
 const action = (x,y,event = null) => {
   //點擊時觸發
   if(endStatus.value) return false
 
   if(!timerStatus.value){
-    dealFirst(x,y)
     gameStore.createTimer()
-  }else if(isMobile.value && !checkOpen()){
+  }
+
+  if(!checkOpen()){
     dealFirst(x,y)
   }
 
@@ -243,7 +255,7 @@ const mark = (x = null,y = null,event = null) => {
     
 const count = (x,y) => {
   land.value[x][y].check = true
-
+  
   if (land.value[x][y].figure == 0) {
     // 本格周圍炸彈數0時擴散檢查
     if ((x - 1 >= 0) && (y - 1 >= 0)) if (!land.value[x - 1][y - 1].check) mark(x - 1,y - 1)
@@ -254,7 +266,7 @@ const count = (x,y) => {
     if ((x + 1 < gameRule.value.row) && (y - 1 >= 0)) if (!land.value[x + 1][y - 1].check) mark(x + 1,y - 1)
     if (x + 1 < gameRule.value.row) if (!land.value[x + 1][y].check) mark(x + 1,y)
     if ((x + 1 < gameRule.value.row) && (y + 1 < gameRule.value.col)) if (!land.value[x + 1][y + 1].check) mark(x + 1,y + 1)
-  } else if(land.value[x][y].figure !== -1) {
+  } else if((land.value[x][y].figure !== -1)) {
     land.value[x][y].display = land.value[x][y].figure
   }
 
@@ -267,7 +279,7 @@ const close = () => {
 const dealFirst = (x,y) => {
   //處理第一次點擊為0
   while(land.value[x][y].figure !== 0){
-    init()
+    init(false)
   }
 }
 
@@ -296,6 +308,6 @@ watch(() => guessBoom.value ,() => {
 },{deep: true})
 
 watch(() => gameRule.value ,() => {
-  init()
+  init(true)
 })
 </script>
