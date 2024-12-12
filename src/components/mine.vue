@@ -13,10 +13,13 @@
         <img class="h-[20px] md:h-[35px]" src="@/assets/img/clock.png" alt="">
         <div class="w-[30px] md:w-[35px] mx-[2px] text-base md:text-xl text-[#3D3D3D] font-bold">{{second}}</div>
       </div>
+      <div class="w-auto p-1 md:p-2 flex flex-wrap items-center justify-center">
+        <img @click="reGame" class="h-[20px] md:h-[35px]" src="@/assets/img/return.png" alt="">
+      </div>
     </div>  
     <div ref="broad" v-if="land.length > 0" class="flex-wrap mine-flex-center border-[#A0C4FF] border-2 md:border-4 rounded-md">
       <div v-for="(item, index) in land[0].length" :key="index">
-          <div class="w-[24px] h-[24px] mobile:w-[30px] mobile:h-[30px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
+          <div class="w-[22px] h-[22px] mobile:w-[28px] mobile:h-[28px] md:w-[42px] md:h-[42px] border-[1px] md:border-2 border-[#E0F7FA] rounded mine-flex-center " 
             v-for="(items, indexs) in land" :class="[land[indexs][index]?.check ? 'bg-[#F4A261]' : 'bg-[#228B22]']" 
             @mousedown="action(indexs,index,$event)" :key="indexs">
             <span v-if="land[indexs][index]?.display == 'F'">
@@ -25,7 +28,7 @@
             <span v-else-if="land[indexs][index]?.display == 'X'">
               <img class="h-full" src="@/assets/img/boom.png" alt="">
             </span>
-            <span class="text-lg mobile:text-xl md:text-2xl" v-else>{{land[indexs][index]?.display}}</span>
+            <span v-else @auxclick="bothClick(indexs,index)" class="w-full h-full text-lg mobile:text-xl md:text-2xl flex items-center justify-center">{{land[indexs][index]?.display}}</span>
           </div>
       </div>
     </div>
@@ -45,7 +48,7 @@
             </div>
           </template>
           <template v-slot:button>
-            <button class="bg-green-500 text-xl font-bold text-[#FFFFF0] py-2 px-4 rounded-xl transition-all duration-300 hover:bg-green-400" @click="init">再玩一次</button>
+            <button class="bg-green-500 text-xl font-bold text-[#FFFFF0] py-2 px-4 rounded-xl transition-all duration-300 hover:bg-green-400" @click="init(true)">再玩一次</button>
           </template>
         </messageBox> 
       </Transition>
@@ -153,7 +156,7 @@ const init = (isNew = false) => {
   if(!timerStatus.value){
     gameStore.clearSecond()
   }
-  
+
 }
     
 const madeBoom = () => {
@@ -173,6 +176,23 @@ const madeBoom = () => {
 
 init(true)
 
+const bothClick = (x,y) => {
+  //處理雙重點擊
+  if((land.value[x][y].display == 'F') || (land.value[x][y].display == '')){
+    return false
+  }
+
+  if ((x - 1 >= 0) && (y - 1 >= 0)) if (land.value[x-1][y-1].display != 'F') mark(x-1,y-1)
+  if (x - 1 >= 0) if (land.value[x - 1][y].display != 'F') mark(x - 1,y)
+  if (x - 1 >= 0 && (y + 1 < gameRule.value.col)) if (land.value[x - 1][y + 1].display != 'F') mark(x - 1,y + 1)
+  if (y - 1 >= 0) if (land.value[x][y - 1].display != 'F') mark(x,y - 1)
+  if (y + 1 < gameRule.value.col) if (land.value[x][y + 1].display != 'F') mark(x,y + 1)
+  if ((x + 1 < gameRule.value.row) && (y - 1 >= 0)) if (land.value[x + 1][y - 1].display != 'F') mark(x + 1,y - 1)
+  if (x + 1 < gameRule.value.row) if (land.value[x + 1][y].display != 'F') mark(x + 1,y)
+  if ((x + 1 < gameRule.value.row) && (y + 1 < gameRule.value.col)) if (land.value[x + 1][y + 1].display != 'F') mark(x + 1,y + 1)
+
+}
+
 const action = (x,y,event = null) => {
   //點擊時觸發
   if(endStatus.value) return false
@@ -184,9 +204,9 @@ const action = (x,y,event = null) => {
   if(!checkOpen()){
     dealFirst(x,y)
   }
-
+  
   //手機板改流程和調整icon位置
-  if(isMobile.value && !land.value[x][y].check){
+  if(isMobile.value && (!land.value[x][y].check)){
     step.x = x
     step.y = y
     mobileSelectStatus.value = true
@@ -249,7 +269,7 @@ const mark = (x = null,y = null,event = null) => {
     gameStore.getRecord()
     return false
   }
-  // 計算本格和周圍數字
+
   count(x,y)
 }
     
@@ -277,7 +297,7 @@ const close = () => {
 }
 
 const dealFirst = (x,y) => {
-  //處理第一次點擊為0
+  //處理第一次點擊需為0
   while(land.value[x][y].figure !== 0){
     init(false)
   }
@@ -293,6 +313,12 @@ const checkOpen = () => {
     }
   }
   return false
+}
+
+const reGame = () => {
+  gameStore.clearTimer()
+  gameStore.clearSecond()
+  init(true)
 }
 
 watch(() => guessBoom.value ,() => {
