@@ -53,7 +53,7 @@
         <template v-slot:icon>
           <div
             :class="[iconPositionObject.isVertical ? 'flex-col' : '']" 
-            class="absolute w-[auto] h-[auto] rounded-xl flex gap-[2px]" 
+            class="absolute w-[auto] h-[auto] rounded-xl flex" 
             :style="iconPositionObject">
             <img @click="mark(null,null)" class="h-[30px] mobile:h-[40px]" src="@/assets/img/shovel.png" alt="">
             <img @click="close" class="h-[30px] mobile:h-[40px]" src="@/assets/img/arrow.png" alt="">
@@ -108,6 +108,19 @@ const iconPositionObject = ref({
 })
 let step = {x:null,y:null}
 
+const countTable = (x,y) => {
+  //計算所有數字
+  if ((x - 1 >= 0) && (y - 1 >= 0)) if (land.value[x-1][y-1].figure >= 0) land.value[x-1][y-1].figure++
+  if (x - 1 >= 0) if (land.value[x - 1][y].figure >= 0) land.value[x - 1][y].figure++
+  if (x - 1 >= 0 && (y + 1 < gameRule.value.col)) if (land.value[x - 1][y + 1].figure >= 0) land.value[x - 1][y + 1].figure++
+  if (y - 1 >= 0) if (land.value[x][y - 1].figure >= 0) land.value[x][y - 1].figure++
+  if (y + 1 < gameRule.value.col) if (land.value[x][y + 1].figure >= 0) land.value[x][y + 1].figure++
+  if ((x + 1 < gameRule.value.row) && (y - 1 >= 0)) if (land.value[x + 1][y - 1].figure >= 0) land.value[x + 1][y - 1].figure++
+  if (x + 1 < gameRule.value.row) if (land.value[x + 1][y].figure >= 0) land.value[x + 1][y].figure++
+  if ((x + 1 < gameRule.value.row) && (y + 1 < gameRule.value.col)) if (land.value[x + 1][y + 1].figure >= 0) land.value[x + 1][y + 1].figure++
+
+}
+
 const init = () => {
   // 初始化格子和炸彈
   endStatus.value = false
@@ -115,20 +128,21 @@ const init = () => {
   guessBoom.value = []
   isWin.value = false
   flagBoom = []
-
+  
   for(let i = 0;i<gameRule.value.row;i++) {
     land.value[i] = []
     for(let j = 0;j<gameRule.value.col;j++) {
       land.value[i][j] = {
-        isBoom:false,
         flag:false,
         display:'',
         check:false,
+        figure:0
       }
     }
   }
   madeBoom()
   gameStore.clearSecond()
+  
 }
     
 const madeBoom = () => {
@@ -137,13 +151,13 @@ const madeBoom = () => {
   for(let i = 0;i<count;) {
     const x = Math.floor(Math.random() * gameRule.value.row)
     const y = Math.floor(Math.random() * gameRule.value.col)
-    if(!land.value[x][y].isBoom){
-      land.value[x][y].isBoom = true
+    if(!(land.value[x][y].figure == -1)){
+      land.value[x][y].figure = -1
       flagBoom.push(x + ',' +y)
       i++
+      countTable(x,y)
     }
   }
-
 }
 
 init()
@@ -153,7 +167,10 @@ const action = (x,y,event = null) => {
   if(endStatus.value) return false
 
   if(!timerStatus.value){
+    dealFirst(x,y)
     gameStore.createTimer()
+  }else if(isMobile.value && !checkOpen()){
+    dealFirst(x,y)
   }
 
   //手機板改流程和調整icon位置
@@ -166,19 +183,19 @@ const action = (x,y,event = null) => {
       iconPositionObject.value.isVertical = false
       if(window.screen.width < 350){
         iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 15 + 'px'
-        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 47 + 'px'
+        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 45 + 'px'
       }else{
         iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 20 + 'px'
-        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 62 + 'px'
+        iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 60 + 'px'
       }
       
     }else{
       iconPositionObject.value.isVertical = true
       if(window.screen.width < 350){
-        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 47 + 'px'
+        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 45 + 'px'
         iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 15 + 'px'
       }else{
-        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 62 + 'px'
+        iconPositionObject.value.top = Math.floor(elementY.value) + Math.floor(elementPositionY.value) - 60 + 'px'
         iconPositionObject.value.left = Math.floor(elementX.value) + Math.floor(elementPositionX.value) - 20 + 'px'
       }
       
@@ -212,7 +229,7 @@ const mark = (x = null,y = null,event = null) => {
   }
   if(land.value[x][y].display === 'F') return false
   // 爆炸時動作
-  if (land.value[x][y].isBoom) {
+  if (land.value[x][y].figure == -1) {
     land.value[x][y].display = 'X'
     land.value[x][y].check = true
     endStatus.value = true
@@ -225,19 +242,9 @@ const mark = (x = null,y = null,event = null) => {
 }
     
 const count = (x,y) => {
-  let num = 0
-  // 本格周圍炸彈數
-  if ((x - 1 >= 0) && (y - 1 >= 0)) if (land.value[x - 1][y - 1].isBoom) num++
-  if (x - 1 >= 0) if (land.value[x - 1][y].isBoom) num++
-  if (x - 1 >= 0 && (y + 1 < gameRule.value.col)) if (land.value[x - 1][y + 1].isBoom) num++
-  if (y - 1 >= 0) if (land.value[x][y - 1].isBoom) num++
-  if (y + 1 < gameRule.value.col) if (land.value[x][y + 1].isBoom) num++
-  if ((x + 1 < gameRule.value.row) && (y - 1 >= 0)) if (land.value[x + 1][y - 1].isBoom) num++
-  if (x + 1 < gameRule.value.row) if (land.value[x + 1][y].isBoom) num++
-  if ((x + 1 < gameRule.value.row) && (y + 1 < gameRule.value.col)) if (land.value[x + 1][y + 1].isBoom) num++
   land.value[x][y].check = true
 
-  if (!num) {
+  if (land.value[x][y].figure == 0) {
     // 本格周圍炸彈數0時擴散檢查
     if ((x - 1 >= 0) && (y - 1 >= 0)) if (!land.value[x - 1][y - 1].check) mark(x - 1,y - 1)
     if (x - 1 >= 0 ) if (!land.value[x - 1][y].check) mark(x - 1,y)
@@ -247,12 +254,33 @@ const count = (x,y) => {
     if ((x + 1 < gameRule.value.row) && (y - 1 >= 0)) if (!land.value[x + 1][y - 1].check) mark(x + 1,y - 1)
     if (x + 1 < gameRule.value.row) if (!land.value[x + 1][y].check) mark(x + 1,y)
     if ((x + 1 < gameRule.value.row) && (y + 1 < gameRule.value.col)) if (!land.value[x + 1][y + 1].check) mark(x + 1,y + 1)
-  } else land.value[x][y].display = num
+  } else if(land.value[x][y].figure !== -1) {
+    land.value[x][y].display = land.value[x][y].figure
+  }
 
 }
 
 const close = () => {
   mobileSelectStatus.value = false
+}
+
+const dealFirst = (x,y) => {
+  //處理第一次點擊為0
+  while(land.value[x][y].figure !== 0){
+    init()
+  }
+}
+
+const checkOpen = () => {
+  //確認手機板是否點擊
+  for(let i = 0;i<land.value.length;i++){
+    for(let j = 0;j<land.value[i].length;j++){
+      if(land.value[i][j].check){
+        return true
+      }
+    }
+  }
+  return false
 }
 
 watch(() => guessBoom.value ,() => {
@@ -271,4 +299,3 @@ watch(() => gameRule.value ,() => {
   init()
 })
 </script>
-    
