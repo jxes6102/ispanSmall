@@ -64,7 +64,7 @@
             :class="[iconPositionObject.isVertical ? 'flex-col' : '']" 
             class="absolute w-[auto] h-[auto] rounded-xl flex" 
             :style="iconPositionObject">
-            <img @click="mark(null,null)" class="h-[30px] mobile:h-[40px]" src="@/assets/img/shovel.png" alt="">
+            <img @click="markMobile(null,null)" class="h-[30px] mobile:h-[40px]" src="@/assets/img/shovel.png" alt="">
             <img @click="close" class="h-[30px] mobile:h-[40px]" src="@/assets/img/arrow.png" alt="">
             <img @click="mark(null,null,2)" class="h-[30px] mobile:h-[40px]" src="@/assets/img/redflag.png" alt="">
           </div>
@@ -221,7 +221,7 @@ const action = (x,y,event = null) => {
   }
   
   //手機板改流程和調整icon位置
-  if(isMobile.value && (!land.value[x][y].check)){
+  if(isMobile.value && (land.value[x][y].figure !== 0)){
     step.x = x
     step.y = y
     mobileSelectStatus.value = true
@@ -249,6 +249,21 @@ const action = (x,y,event = null) => {
     }
   }else{
     mark(x,y,event)
+  }
+}
+
+const markMobile = (x,y) => {
+  if((x ==  null)){
+    x = step.x
+  }
+  if((y == null)){
+    y = step.y
+  }
+  //處理手機範圍點擊
+  if((land.value[x][y].figure > 0) && land.value[x][y].check){
+    bothClick(x,y)
+  }else{
+    mark(null,null)
   }
 }
 
