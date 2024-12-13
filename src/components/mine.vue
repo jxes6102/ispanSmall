@@ -43,15 +43,18 @@
       >
         <messageBox v-if="endStatus">
           <template v-slot:text>
-            <div class="text-3xl font-bold">
-              {{ '時間:' + recordSecond }}
+            <div class="text-xl md:text-3xl font-bold">
+              {{ '最佳時間:' + bestSecond }}
             </div>
-            <div class="text-5xl font-bold" :class="[isWin ? 'text-green-500' : 'text-red-500']">
+            <div class="text-xl md:text-3xl font-bold">
+              {{ '時間:' + second }}
+            </div>
+            <div class="text-3xl md:text-5xl font-bold" :class="[isWin ? 'text-green-500' : 'text-red-500']">
               {{ isWin ? '成功' : '失敗' }}
             </div>
           </template>
           <template v-slot:button>
-            <button class="bg-green-500 text-xl font-bold text-[#FFFFF0] py-2 px-4 rounded-xl transition-all duration-300 hover:bg-green-400" @click="init(true)">再玩一次</button>
+            <button class="bg-green-500 text-lg md:text-xl font-bold text-[#FFFFF0] py-2 px-4 rounded-xl transition-all duration-300 hover:bg-green-400" @click="init(true)">再玩一次</button>
           </template>
         </messageBox> 
       </Transition>
@@ -110,8 +113,8 @@ const second = computed(() => {
 const timerStatus = computed(() => {
   return gameStore.timerStatus
 })
-const recordSecond = computed(() => {
-  return gameStore.recordSecond
+const bestSecond = computed(() => {
+  return gameStore.bestSecond(isMobile.value,level.value)
 })
 const boomCount = computed(() => {
   return gameRule.value.boomAmount - guessBoom.value.length
@@ -347,9 +350,9 @@ provide('location', {
 watch(() => guessBoom.value ,() => {
   // 判斷勝負
   if (flagBoom.sort().toString() === guessBoom.value.sort().toString()) {
-    gameStore.setRecord()
     endStatus.value = true
     isWin.value = true
+    gameStore.setRecord(isMobile.value,level.value)
     gameStore.clearTimer()
     gameStore.getRecord()
   }
