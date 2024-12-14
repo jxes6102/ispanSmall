@@ -221,7 +221,7 @@ const action = (x,y,event = null) => {
   }
   
   //手機板改流程和調整icon位置
-  if(isMobile.value && (land.value[x][y].figure !== 0)){
+  if(isMobile.value && ((land.value[x][y].figure !== 0) || (!land.value[x][y].check))){
     step.x = x
     step.y = y
     mobileSelectStatus.value = true
