@@ -41,7 +41,7 @@
         enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut"
       >
-        <messageBox v-if="endStatus">
+        <messageBox v-if="endStatus && endDisplay">
           <template v-slot:text>
             <div class="text-xl md:text-3xl font-bold">
               {{ '最佳時間:' + bestSecond }}
@@ -52,6 +52,7 @@
             <div class="text-3xl md:text-5xl font-bold" :class="[isWin ? 'text-green-500' : 'text-red-500']">
               {{ isWin ? '成功' : '失敗' }}
             </div>
+            <img @click="closeEnd" class="absolute top-0 right-0 m-1 md:m-2 h-[20px] md:h-[35px] z-[10] cursor-pointer" src="@/assets/img/error.png" alt="">
           </template>
           <template v-slot:button>
             <button class="bg-green-500 text-lg md:text-xl font-bold text-[#FFFFF0] py-2 px-4 rounded-xl transition-all duration-300 hover:bg-green-400" @click="init(true)">再玩一次</button>
@@ -97,6 +98,7 @@ const isMobile = computed(() => {
 const broad = ref(null)
 const { elementX, elementY,elementPositionX,elementPositionY } = useMouseInElement(broad)
 const endStatus = ref(false)
+const endDisplay = ref(true)
 const mobileSelectStatus = ref(false)
 const isWin = ref(false)
 const land = ref([])
@@ -142,6 +144,7 @@ const countTable = (x,y) => {
 const init = (isNew = false) => {
   // 初始化格子和炸彈
   endStatus.value = false
+  endDisplay.value = false
   if(isNew){
     land.value = []
   }
@@ -210,7 +213,7 @@ const bothClick = (x,y) => {
 
 const action = (x,y,event = null) => {
   //點擊時觸發
-  if(endStatus.value) return false
+  if(endStatus.value || endDisplay.value) return false
 
   if(!timerStatus.value){
     gameStore.createTimer()
@@ -292,9 +295,16 @@ const mark = (x = null,y = null,event = null) => {
   if(land.value[x][y].display === 'F') return false
   // 爆炸時動作
   if (land.value[x][y].figure == -1) {
-    land.value[x][y].display = 'X'
-    land.value[x][y].check = true
+    let temp = flagBoom.map((item)=> item.split(','))
+    for(let i = 0;i<temp.length;i++){
+      let tempX = parseInt(temp[i][0])
+      let tempY = parseInt(temp[i][1])
+      land.value[tempX][tempY].display = 'X'
+      land.value[tempX][tempY].check = true
+    }
+
     endStatus.value = true
+    endDisplay.value = true
     gameStore.clearTimer()
     gameStore.getRecord()
     return false
@@ -362,10 +372,15 @@ provide('location', {
   closeIntroduction
 })
 
+const closeEnd = () => {
+  endDisplay.value = false
+}
+
 watch(() => guessBoom.value ,() => {
   // 判斷勝負
   if (flagBoom.sort().toString() === guessBoom.value.sort().toString()) {
     endStatus.value = true
+    endDisplay.value = true
     isWin.value = true
     gameStore.setRecord(isMobile.value,level.value)
     gameStore.clearTimer()
