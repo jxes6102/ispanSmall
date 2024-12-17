@@ -1,7 +1,7 @@
 <template>
-    <div v-stoprightmouse @click.self="closeIntroduction" class="w-[100vw] h-[100vh] fixed left-0 top-0 bg-[rgba(39,39,39,0.9)] flex flex-wrap items-center justify-center">
+    <div v-stoprightmouse @mousedown.self="closeIntroduction" @touchstart.self="closeIntroduction" class="w-[100vw] h-[100vh] fixed left-0 top-0 bg-[rgba(39,39,39,0.9)] flex flex-wrap items-center justify-center">
         <div class="relative w-[80vw] h-[60vw] md:w-[600px] md:h-[450px] bg-[#FAF3E0] rounded-xl flex flex-col items-center justify-center">
-            <img @click="closeIntroduction" class="absolute top-0 right-0 m-1 md:m-2 h-[20px] md:h-[35px] z-[10] cursor-pointer" src="@/assets/img/error.png" alt="">
+            <img @mousedown.self="closeIntroduction" @touchstart.self="closeIntroduction" class="absolute top-0 right-0 m-1 md:m-2 h-[20px] md:h-[35px] z-[10] cursor-pointer" src="@/assets/img/error.png" alt="">
             <div @mousedown="down" @mouseup="up" @touchstart="down" @touchend="up" class="w-full h-full overflow-hidden">
                 <div class="transition-all h-full flex flex-wrap items-center justify-center"
                     :style="moveStyle">
